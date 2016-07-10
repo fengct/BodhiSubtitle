@@ -1,4 +1,4 @@
-#define WIN32_LEAN_AND_MEAN
+﻿#define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include <wchar.h>
 
@@ -11,34 +11,43 @@
 #include "qjsonvalue.h"
 #include "qjsondocument.h"
 #include "const.h"
+#pragma execution_character_set("utf-8")
 
 static QString s_timeFormat = QObject::tr("yyyy-M-d h:mm:ss");
 static QString s_shortTimeFormat = QObject::tr("h:mm:ss");
 static QString s_hisFileName = QObject::tr("history");
 
-QJsonObject* Work2Json(const Work &w, QJsonObject *json)
+Work::Work()
+    : type(WT_UNKOWN)
+    , lastIndex(-1)
 {
-    json->insert("SoundFile", w.soundFile);
-    json->insert("SubtitleFile", w.subtitleFile);
-    json->insert("Type", (int)w.type);
-    json->insert("FirstTime", w.firstTime.toString(s_timeFormat));
-    json->insert("LastTime", w.lastTime.toString(s_timeFormat));
-    json->insert("UsedTime", w.usedTime.toString(s_shortTimeFormat));
-    json->insert("LastIndex", w.lastIndex);
-    return json;
 }
 
 #define TAKE_STR(json, name, receiver) {\
     if (!json.contains(name)) break; \
     QJsonValue val = json.take(name); \
     if (!val.isString()) break; \
+    qDebug() << "name: " << name << ", value: " << val.toString(); \
     receiver = val.toString(); }
 
 #define TAKE_INT(json, name, receiver) {\
     if (!json.contains(name)) break; \
     QJsonValue val = json.take(name); \
     if (!val.isDouble()) break; \
+    qDebug() << "name: " << name << ", value: " << val.toInt(); \
     receiver = val.toInt(); }
+
+QJsonObject* Work2Json(const Work &w, QJsonObject *json)
+{
+    json->insert("SoundFile", w.soundFile);
+    json->insert("SubtitleFile", w.subtitleFile);
+    json->insert("Type", (int)w.type);
+//    json->insert("FirstTime", w.firstTime.toString(s_timeFormat));
+//    json->insert("LastTime", w.lastTime.toString(s_timeFormat));
+//    json->insert("UsedTime", w.usedTime.toString(s_shortTimeFormat));
+    json->insert("LastIndex", w.lastIndex);
+    return json;
+}
 
 bool WorkFromJson(QJsonObject &json, Work *w)
 {
@@ -50,13 +59,13 @@ bool WorkFromJson(QJsonObject &json, Work *w)
         TAKE_STR(json, "SubtitleFile", w->subtitleFile);
         TAKE_INT(json, "Type", ival);
         w->type = (WorkType)ival;
-        TAKE_STR(json, "FirstTime", sval);
-        w->firstTime = QDateTime::fromString(sval, s_timeFormat);
-        TAKE_STR(json, "LastTime", sval);
-        w->lastTime = QDateTime::fromString(sval, s_timeFormat);
-        TAKE_STR(json, "UsedTime", sval);
-        w->usedTime = QTime::fromString(sval, s_shortTimeFormat);
-        TAKE_INT(json, "Type", w->lastIndex)
+//        TAKE_STR(json, "FirstTime", sval);
+//        w->firstTime = QDateTime::fromString(sval, s_timeFormat);
+//        TAKE_STR(json, "LastTime", sval);
+//        w->lastTime = QDateTime::fromString(sval, s_timeFormat);
+//        TAKE_STR(json, "UsedTime", sval);
+//        w->usedTime = QTime::fromString(sval, s_shortTimeFormat);
+        TAKE_INT(json, "LastIndex", w->lastIndex)
         return true;
     }while(0);
     return false;
@@ -79,29 +88,19 @@ QString getEnvironVariant(const QString &name, const QString &defaultVal)
 QString Config::getCfgDir()
 {
     QString path = getEnvironVariant("LOCALAPPDATA", QDir::currentPath());
-    qDebug() << "got path=" << path;
+    qDebug() << "Checking 'LOCALAPPDATA' ... got path=" << path;
     if (!path.endsWith("\\"))
         path += "\\";
     path += APP_NAME;
     //path = path.replace("\\", "-");
-    qDebug() << "afeter change:" << path;
-
-    QDir dir(path);
-    if (!dir.exists()){
-        if (!dir.mkdir(path)){
-            qWarning() << "Create dir <" << path << "> failed.";
-            return "";
-        }
-    }
+    qDebug() << "Config dir: " << path;
     return path;
 }
 
 bool Config::isFirstTimeRun()
 {
-    QString cfgDir = getCfgDir();
-    cfgDir += '/';
-    QFileInfo fi(cfgDir + s_hisFileName);
-    return !fi.exists();
+    QDir dir(getCfgDir());
+    return !dir.exists();
 }
 
 bool Config::saveHistory()
@@ -143,8 +142,10 @@ bool Config::readHistory()
         qWarning() << "Read history failed!";
         return false;
     }
-    qInfo() << "Reading history file: " << path;
 
+    path += '\\';
+    path += s_hisFileName;
+    qInfo() << "Reading history file: " << path;
     QFile doc(path);
     if (!doc.open(QIODevice::ReadOnly | QIODevice::Text)){
         qWarning() << "Open file failed!";
@@ -159,7 +160,7 @@ bool Config::readHistory()
         return false;
     }
 
-    if (jd.isObject()){
+    if (!jd.isObject()){
         qWarning() << "Unexpecte file format: JsonObject expectd!";
         return false;
     }
@@ -169,7 +170,6 @@ bool Config::readHistory()
     bool error = true;
     do{
         TAKE_STR(json, "WorkDir", m_workDir);
-        m_workDir = sval;
         error = false;
     }while(0);
     if (error)
@@ -177,15 +177,15 @@ bool Config::readHistory()
 
     QJsonValue hisRecords = json.take("History");
     if (!hisRecords.isArray()){
-        qWarning() << "Unexpecte file format: JsonArray expectd!";
-        return false;
+        qWarning() << "No history found!";
+        return true;
     }
     QJsonArray ja = hisRecords.toArray();
     QJsonArray::const_iterator it = ja.begin();
     Work w;
     for(; it != ja.end(); it++){
         QJsonValue &jval = *it;
-        if (jval.isObject()){
+        if (!jval.isObject()){
             qWarning() << "Unexpecte file format: JsonObject expectd!";
             break;
         }
@@ -197,4 +197,34 @@ bool Config::readHistory()
         m_history.push_back(w);
     }
     return true;
+}
+
+void Config::addHistory(Work &w)
+{
+    WorkList::iterator it = m_history.begin();
+    for(; it!=m_history.end(); it++){
+        Work &work = *it;
+        if (work.subtitleFile == w.subtitleFile){
+            m_history.erase(it);
+            break;
+        }
+    }
+    m_history.push_front(w);
+}
+
+QString getMatchedPath(const QString &path)
+{
+    QFileInfo fi(path);
+    if (!fi.isFile())
+        return "";
+
+    QString p = path.mid(0, path.lastIndexOf('.'));
+    QString ext = fi.suffix().toLower();
+    if (ext == "srt"){
+        p += ".mp3";
+    } else {
+        p += ".srt";
+    }
+    qDebug() << "matched path for [" << path << "] is [" << p << "]";
+    return p;
 }

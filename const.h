@@ -3,7 +3,7 @@
 
 #include "qstring.h"
 
-QString APP_NAME = "BodhiSubtitle";
+const char *APP_NAME = "BodhiSubtitle";
 
 #endif // CONST_H
 

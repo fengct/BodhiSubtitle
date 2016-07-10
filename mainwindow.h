@@ -3,6 +3,9 @@
 
 #include <QMainWindow>
 #include <QApplication>
+#include <QStandardItemModel>
+#include <QModelIndex>
+#include "config.h"
 
 namespace Ui {
 class MainWindow;
@@ -21,12 +24,21 @@ public:
 private slots:
     void on_btnNewSubtitle_clicked();
 
-    void on_btnProofReading_clicked();
+    void on_btnCollate_clicked();
+
+    void on_btnPlay_clicked();
+
+    void on_history_item_clicked(QModelIndex index);
 
     void on_tabWidget_currentChanged(int index);
 
+    void on_actionClose_triggered();
+private:
+    void updateHistoryList();
+    void createSession(Work &w);
 private:
     Ui::MainWindow *ui;
+    QStandardItemModel *m_historyFiles;
     BodhiApp *myApp;
     //just for test
     std::list<QString> m_contents;

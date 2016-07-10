@@ -4,9 +4,9 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui multimedia 
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets quickwidgets
 
 TARGET = BodhiSubtitle
 TEMPLATE = app
@@ -20,7 +20,8 @@ SOURCES += main.cpp\
     parser.cpp \
     bodhicore.cpp \
     srtview.cpp \
-    bodhisession.cpp
+    bodhisession.cpp \
+    bodhiplayer.cpp
 
 HEADERS  += mainwindow.h \
     config.h \
@@ -30,6 +31,8 @@ HEADERS  += mainwindow.h \
     parser.h \
     srtarchive.h \
     srtview.h \
-    bodhisession.h
+    bodhisession.h \
+    bodhiplayer.h \
+    commands.h
 
 FORMS    += mainwindow.ui

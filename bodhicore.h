@@ -10,8 +10,8 @@ public:
     SrtRecord(int seq, long stime = 0, long etime = 0, const QString &cont = sDefaultText);
 
     int sequence;
-    long startTime;
-    long endTime;
+    qint64 startTime;
+    qint64 endTime;
     QString content;
     static QString sDefaultText;
 
@@ -28,9 +28,12 @@ class BodhiSubtitle
 public:
     BodhiSubtitle();
 
-    const SrtRecord* getRecord(int sequence);
+    const SrtRecord* getRecord(int sequence) const;
 
     int recordCount() const;
+
+    void resetChangeFlag() { m_changed = false; }
+    bool changed() const { return m_changed; }
 
     bool modifyRecord(int sequence, SrtRecord &newValue);
 

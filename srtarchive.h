@@ -4,6 +4,7 @@
 #include <QString>
 #include <QStringList>
 
+class BodhiSubtitle;
 class SrtArchive
 {
     QString m_path;
@@ -16,6 +17,8 @@ public:
     bool load();
 
     bool save();
+
+    bool write(const BodhiSubtitle &data, const QString &path);
 
     //current line number
     int lineNumber() const;

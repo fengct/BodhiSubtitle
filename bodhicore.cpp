@@ -1,7 +1,9 @@
-#include "bodhicore.h"
+﻿#include "bodhicore.h"
 #include <QTime>
+#include <QString>
+#pragma execution_character_set("utf-8")
 
-QString SrtRecord::sDefaultText = "double click"; //tr("双击以编辑");
+QString SrtRecord::sDefaultText = "双击以编辑";
 
 SrtRecord::SrtRecord(int seq, long stime, long etime, const QString &cont)
     : sequence(seq)
@@ -42,7 +44,7 @@ BodhiSubtitle::BodhiSubtitle()
 
 }
 
-const SrtRecord* BodhiSubtitle::getRecord(int sequence)
+const SrtRecord* BodhiSubtitle::getRecord(int sequence) const
 {
     if (sequence < 0)
         sequence = m_data.size() + (sequence % m_data.size());

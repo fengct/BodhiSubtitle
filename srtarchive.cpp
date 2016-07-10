@@ -1,6 +1,9 @@
-#include "srtarchive.h"
+﻿#include "srtarchive.h"
 #include <QFile>
 #include <QTextStream>
+#include <QDebug>
+#include "bodhicore.h"
+#pragma execution_character_set("utf-8")
 
 static QString LineSep = ("\r\n");
 
@@ -14,8 +17,11 @@ SrtArchive::SrtArchive(const QString &path)
 bool SrtArchive::load()
 {
     QFile file(m_path);
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+    qInfo() << "open srt file: " << m_path;
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)){
+        qWarning() << "open file failed!";
         return false;
+    }
 
     QTextStream instream(&file);
     instream.setAutoDetectUnicode(true);
@@ -39,6 +45,28 @@ bool SrtArchive::save()
     QStringList::Iterator it = m_lines.begin();
     for (; it != m_lines.end(); it++){
         ostream << *it << LineSep;
+    }
+    ostream.flush();
+    return true;
+}
+
+bool SrtArchive::write(const BodhiSubtitle &data, const QString &path)
+{
+    QFile file(path);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
+        return false;
+
+    QTextStream ostream(&file);
+    ostream.setCodec(("UTF-8"));
+    ostream.setGenerateByteOrderMark(m_bom);
+
+    int cnt = data.recordCount();
+    for (int i = 0; i < cnt; i++){
+        const SrtRecord &record = *data.getRecord(i);
+        ostream << record.sequence + 1 << LineSep;
+        ostream << record.ts() << " -- >" << record.te() << LineSep;
+        ostream << record.content << LineSep;
+        ostream << LineSep;
     }
     ostream.flush();
     return true;

@@ -1,12 +1,17 @@
-#include <math.h>
+﻿#include <math.h>
 #include "srtview.h"
+#include "ui_mainwindow.h"
 #include "bodhicore.h"
+#include "bodhisession.h"
+#include "bodhiplayer.h"
 #include <QPainter>
 #include <QColor>
 #include <QBrush>
 #include <QDebug>
 #include <QMouseEvent>
 #include <QKeyEvent>
+#include <QProgressBar>
+#pragma execution_character_set("utf-8")
 
 //static const int LH = 40;
 //static const int PH = 10*LH;
@@ -22,13 +27,14 @@ void MyScrollBar::onWheelEvent(QWheelEvent *event)
     qDebug() << "wheel event fired on scroll bar.";
 }
 
-SrtView::SrtView(QWidget *parent, Ui::MainWindow *ui, BodhiSubtitle *subtitle)
+SrtView::SrtView(QWidget *parent, Ui::MainWindow *ui, BodhiSubtitle *subtitle, BodhiSession *session)
     : QWidget(parent)
     , m_ui(ui)
     , m_subtitle(subtitle)
     , m_marginLT(20, 20)
     , m_marginRB(20, 20)
     , m_scrollBar(0)
+    , m_session(session)
     , m_LH(40)
     , m_PH(10*m_LH)
     , m_tsPos(m_marginLT.x() + 50)
@@ -68,11 +74,78 @@ void SrtView::onTabActived()
     m_scrollBar->setTracking(true);
     m_scrollBar->setVisible(true);
     QObject::connect(m_scrollBar, SIGNAL(valueChanged(int)), this, SLOT(onScrolled(int)));
+
+    updatePlayButtonText();
+    updateProgressBar(true);
+}
+
+void SrtView::onSessionStart(BodhiSession *session)
+{
+    qDebug() << "SrtView::onSessionStart";
+    Q_ASSERT(session == m_session);
+    BodhiPlayer *player = session->player();
+    if (player && player->getQtPlayer()){
+        qDebug() << "connect media signals";
+        connect(player->getQtPlayer(), SIGNAL(positionChanged(qint64)), this, SLOT(onMediaPositionChanged(qint64)));
+        connect(player->getQtPlayer(), SIGNAL(stateChanged(QMediaPlayer::State)), this, SLOT(onMediaStateChanged(QMediaPlayer::State)));
+    }
+}
+
+void SrtView::onSessionEnd(BodhiSession *session)
+{
+    qDebug() << "SrtView::onSessionEnd";
+    Q_ASSERT(session == m_session);
+    BodhiPlayer *player = session->player();
+    if (player && player->getQtPlayer()){
+        qDebug() << "disconnect media signals";
+        disconnect(player->getQtPlayer(), SIGNAL(positionChanged(qint64)), this, SLOT(onMediaPositionChanged(qint64)));
+        disconnect(player->getQtPlayer(), SIGNAL(stateChanged(QMediaPlayer::State)), this, SLOT(onMediaStateChanged(QMediaPlayer::State)));
+    }
+}
+
+void SrtView::updatePlayButtonText()
+{
+    BodhiPlayer *player = m_session->player();
+    if (player != NULL){
+        QString text = "Play";
+        if (player->isPlaying())
+            text = "Pause";
+        m_ui->pushButton_playPause->setText(text);
+    }
+}
+
+void SrtView::updateProgressBar(bool setRange)
+{
+    BodhiPlayer *player = m_session->player();
+    QProgressBar *pb = m_ui->progressBar;
+    if (pb && player){
+        qint64 duration = 100, position = 0;
+        if (pb->maximum() == 0){
+            duration = player->duration();
+            pb->setMaximum(duration);
+            pb->setMinimum(0);
+            pb->setTextVisible(true);
+        }
+        position = player->getQtPlayer() ? player->getQtPlayer()->position() : 0;
+        pb->setValue(position);
+    }
 }
 
 void SrtView::onScrolled(int pos)
 {
     update();
+}
+
+void SrtView::onMediaPositionChanged(qint64 pos)
+{
+//    qDebug() << "SrtView::onMediaPositionChanged, pos=" << pos;
+    updateProgressBar(false);
+}
+
+void SrtView::onMediaStateChanged(QMediaPlayer::State state)
+{
+    qDebug() << "SrtView::onMediaStateChanged, state=" << int(state);
+    updatePlayButtonText();
 }
 
 void SrtView::paintEvent(QPaintEvent *event)
@@ -122,11 +195,33 @@ void SrtView::paintEvent(QPaintEvent *event)
 void SrtView::mousePressEvent(QMouseEvent * event)
 {
     QWidget::mousePressEvent(event);
+    this->setFocus();
+    qDebug() << "mousePrecessEvent";
     int sel = pickRecord(event->x(), event->y() + m_scrollBar->value());
     if (sel > 0){
         m_selectStart = sel;
         m_selectCount = sel >= 0 ? 1 : 0;
         update();
+    }
+    BodhiPlayer *player = m_session->player();
+    player->playPause();
+    updatePlayButtonText();
+}
+
+void SrtView::mouseDoubleClickEvent(QMouseEvent * event)
+{
+    QWidget::mouseDoubleClickEvent(event);
+    this->setFocus();
+    qDebug() << "mouseDoubleClickEvent";
+    int sel = pickRecord(event->x(), event->y() + m_scrollBar->value());
+    if (sel > 0){
+        m_selectStart = sel;
+        m_selectCount = sel >= 0 ? 1 : 0;
+        update();
+
+        BodhiPlayer *player = m_session->player();
+        player->playPause();
+        updatePlayButtonText();
     }
 }
 
@@ -265,5 +360,11 @@ void SrtView::keyPressEvent(QKeyEvent * event)
         if (ctrlHold)
             scrollTo(m_scrollBar->maximum());
         break;
+    case Qt::Key_Space:
+        BodhiPlayer *player = m_session->player();
+        player->playPause();
+        updatePlayButtonText();
+        break;
     }
 }
+

@@ -3,9 +3,11 @@
 
 #include <QWidget>
 #include <QScrollBar>
+#include <QMediaPlayer>
 #include "mainwindow.h"
 
 class BodhiSubtitle;
+class BodhiSession;
 
 class MyScrollBar : public QScrollBar
 {
@@ -20,6 +22,7 @@ class SrtView : public QWidget
 
     Ui::MainWindow *m_ui;
     BodhiSubtitle *m_subtitle;
+    BodhiSession *m_session;
     QPoint m_marginLT;
     QPoint m_marginRB;
     QScrollBar *m_scrollBar;
@@ -38,18 +41,23 @@ protected:
     void wheelEvent(QWheelEvent *event) Q_DECL_OVERRIDE;
     //void mouseReleaseEvent(QMouseEvent * event) Q_DECL_OVERRIDE;
     //void mouseMoveEvent(QMouseEvent * event) Q_DECL_OVERRIDE;
-    //void mouseDoubleClickEvent(QMouseEvent * event) Q_DECL_OVERRIDE;
+    void mouseDoubleClickEvent(QMouseEvent * event) Q_DECL_OVERRIDE;
     void keyPressEvent(QKeyEvent * event) Q_DECL_OVERRIDE;
     //void keyReleaseEvent(QMouseEvent * event) Q_DECL_OVERRIDE;
 public:
-    explicit SrtView(QWidget *parent, Ui::MainWindow *ui, BodhiSubtitle *subtitle);
+    explicit SrtView(QWidget *parent, Ui::MainWindow *ui, BodhiSubtitle *subtitle, BodhiSession *session);
     void setTabIndex(int idx);
     int tabIndex() const { return m_tabIndex; }
+    BodhiSession* session() const { return m_session; }
 signals:
     void wheelEventFired(QWheelEvent *event);
 public slots:
+    void onSessionStart(BodhiSession *session);
+    void onSessionEnd(BodhiSession *session);
     void onTabActived();
     void onScrolled(int pos);
+    void onMediaPositionChanged(qint64 pos);
+    void onMediaStateChanged(QMediaPlayer::State state); 
 private:
     int pickRecord(int x, int y);
     int singleSelectItem() const;
@@ -57,6 +65,8 @@ private:
     void scroll(int offset);
     void scrollTo(int pos);
     bool inVisibleArea(int sequence);
+    void updatePlayButtonText();
+    void updateProgressBar(bool setRange);
 };
 
 #endif // SRTVIEW_H

@@ -13,6 +13,7 @@
 
 enum WorkType
 {
+    WT_UNKOWN,
     WT_DICATION,
     WT_COLLATION
 };
@@ -25,6 +26,9 @@ struct Work{
     QDateTime lastTime;
     QTime usedTime;
     int lastIndex;
+
+public:
+    Work();
 };
 typedef std::list<Work> WorkList;
 QJsonObject* Work2Json(const Work &w, QJsonObject *json);
@@ -37,12 +41,17 @@ class Config
 public:
     bool readHistory();
     bool saveHistory();
+    const WorkList& getHistory() const { return m_history; }
+//    const QStringList getHistoryFiles();
+    void addHistory(Work &w);
     bool isFirstTimeRun();
     void setWorkDir(const QString &dir) { m_workDir = dir; }
     QString getWorkDir() const { return m_workDir; }
-protected:
     QString getCfgDir();
+protected:
 };
+
+QString getMatchedPath(const QString &path);
 
 #endif // CONFIG_H
 
