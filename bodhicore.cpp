@@ -44,11 +44,11 @@ BodhiSubtitle::BodhiSubtitle()
 
 }
 
-const SrtRecord* BodhiSubtitle::getRecord(int sequence) const
+const SrtRecordPtr BodhiSubtitle::getRecord(int sequence) const
 {
     if (sequence < 0)
         sequence = m_data.size() + (sequence % m_data.size());
-    return &m_data.at(sequence);
+    return m_data.at(sequence);
 }
 
 int BodhiSubtitle::recordCount() const
@@ -56,9 +56,9 @@ int BodhiSubtitle::recordCount() const
     return m_data.size();
 }
 
-bool BodhiSubtitle::modifyRecord(int sequence, SrtRecord &newValue)
+bool BodhiSubtitle::modifyRecord(int sequence, SrtRecordPtr newValue)
 {
-    Q_ASSERT(newValue.sequence == sequence);
+    Q_ASSERT(newValue->sequence == sequence);
     if (sequence < 0 || m_data.size() >= sequence)
         return false;
 
@@ -70,11 +70,11 @@ bool BodhiSubtitle::modifyRecord(int sequence, SrtRecord &newValue)
     return true;
 }
 
-bool BodhiSubtitle::append(const SrtRecord &record)
+bool BodhiSubtitle::append(const SrtRecordPtr record)
 {
-    if (record.sequence != m_data.size())
+    if (record->sequence != m_data.size())
         return false;
-    if (!checkTimestamp(record.sequence, record))
+    if (!checkTimestamp(record->sequence, record))
         return false;
 
     m_data.append(record);
@@ -99,8 +99,8 @@ void BodhiSubtitle::updateSequence(int start, int delta)
 {
     int seq = start;
     for(; seq < m_data.size(); seq++){
-        SrtRecord &record = m_data[seq];
-        record.sequence += delta;
+        SrtRecordPtr record = m_data[seq];
+        record->sequence += delta;
     }
 }
 
@@ -109,15 +109,15 @@ bool BodhiSubtitle::split(int sequence, long timeOffset)
     if (timeOffset < m_minTimeLength)
         return false;
 
-    SrtRecord *record = const_cast<SrtRecord*>(getRecord(sequence));
+    SrtRecordPtr record = getRecord(sequence);
     Q_ASSERT(record);
     if (record->endTime - timeOffset < m_minTimeLength)
         return false;
 
-    SrtRecord newRecord(sequence+1, record->startTime + timeOffset, record->endTime);
-    record->endTime = newRecord.startTime;
-    updateSequence(newRecord.sequence, 1);
-    m_data.insert(newRecord.sequence, newRecord);
+    SrtRecordPtr newRecord(new SrtRecord(sequence+1, record->startTime + timeOffset, record->endTime));
+    record->endTime = newRecord->startTime;
+    updateSequence(newRecord->sequence, 1);
+    m_data.insert(newRecord->sequence, newRecord);
     m_changed = true;
     return true;
 }
@@ -132,7 +132,7 @@ bool BodhiSubtitle::adjustTimePoint(int sequence, long timeDelta)
     return false;
 }
 
-bool BodhiSubtitle::checkTimestamp(int sequence, const SrtRecord &newValue)
+bool BodhiSubtitle::checkTimestamp(int sequence, const SrtRecordPtr newValue)
 {
     return true;
 }

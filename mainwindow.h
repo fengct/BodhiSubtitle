@@ -1,4 +1,4 @@
-#ifndef MAINWINDOW_H
+﻿#ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
 #include <QMainWindow>
@@ -33,6 +33,7 @@ private slots:
     void on_tabWidget_currentChanged(int index);
 
     void on_actionClose_triggered();
+    void on_actionSave_triggered();
 private:
     void updateHistoryList();
     void createSession(Work &w);

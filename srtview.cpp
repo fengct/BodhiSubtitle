@@ -11,6 +11,7 @@
 #include <QMouseEvent>
 #include <QKeyEvent>
 #include <QProgressBar>
+#include "commands.h"
 #pragma execution_character_set("utf-8")
 
 //static const int LH = 40;
@@ -103,6 +104,15 @@ void SrtView::onSessionEnd(BodhiSession *session)
     }
 }
 
+void SrtView::onCommand(Command *command)
+{
+    Q_ASSERT(command);
+    int activeLine = command->getActiveLine();
+    if (activeLine > 0)
+        scrollTo(indexToPos(activeLine));
+    update();
+}
+
 void SrtView::updatePlayButtonText()
 {
     BodhiPlayer *player = m_session->player();
@@ -160,7 +170,7 @@ void SrtView::paintEvent(QPaintEvent *event)
     QColor color1(0xdddddd), color2(0xcccccc), colorSel(0x2244ff);
     QRect rect;
     for (int seq = startSeq; seq <= endSeq; seq++){
-        const SrtRecord *record = m_subtitle->getRecord(seq);
+        const SrtRecordPtr record = m_subtitle->getRecord(seq);
         int y = m_marginLT.y() + record->sequence * m_LH;
         rect.setLeft(m_marginLT.x());
         rect.setWidth(SEQ_WIDTH + 2*TS_WIDTH + CONTENT_WIDTH);
@@ -219,8 +229,9 @@ void SrtView::mouseDoubleClickEvent(QMouseEvent * event)
         m_selectCount = sel >= 0 ? 1 : 0;
         update();
 
+        SrtRecordPtr rec = m_subtitle->getRecord(sel);
         BodhiPlayer *player = m_session->player();
-        player->playPause();
+        player->play(rec->startTime, player->duration());
         updatePlayButtonText();
     }
 }
@@ -290,6 +301,11 @@ void SrtView::scroll(int offset)
 void SrtView::scrollTo(int pos)
 {
     m_scrollBar->setValue(pos);
+}
+
+int SrtView::indexToPos(int index)
+{
+    return m_marginLT.y() + m_LH * index;
 }
 
 bool SrtView::inVisibleArea(int sequence)

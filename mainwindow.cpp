@@ -103,10 +103,10 @@ void MainWindow::createSession(Work &work)
 
         connect(ui->btnUndo, SIGNAL(clicked()), session, SLOT(on_btnUndo_cliccked()));
         connect(ui->btnRedo, SIGNAL(clicked()), session, SLOT(on_btnRedo_cliccked()));
-        connect(ui->btnAdd, SIGNAL(clicked()), session, SLOT(on_btnAdd_cliccked()));
-        connect(ui->btnRemove, SIGNAL(clicked()), session, SLOT(on_btnRemove_cliccked()));
-        connect(ui->btnSplit, SIGNAL(clicked()), session, SLOT(on_btnSplit_cliccked()));
-        connect(ui->btnMerge, SIGNAL(clicked()), session, SLOT(on_btnMerge_cliccked()));
+        connect(ui->btnAdd, SIGNAL(clicked()), session, SLOT(on_btnAdd_clicked()));
+        connect(ui->btnRemove, SIGNAL(clicked()), session, SLOT(on_btnRemove_clicked()));
+        connect(ui->btnSplit, SIGNAL(clicked()), session, SLOT(on_btnSplit_clicked()));
+        connect(ui->btnMerge, SIGNAL(clicked()), session, SLOT(on_btnMerge_clicked()));
         connect(ui->btnTimeDecrease, SIGNAL(clicked()), session, SLOT(on_btnTimeDec_clicked()));
         connect(ui->btnTimeIncrease, SIGNAL(clicked()), session, SLOT(on_btnTimeInc_clicked()));
 
@@ -195,6 +195,14 @@ void MainWindow::on_actionClose_triggered()
         myApp->closeSession(session);
 
         updateHistoryList();
+    }
+}
+
+void MainWindow::on_actionSave_triggered()
+{
+    BodhiSession *session = myApp->activeSession();
+    if (session){
+        session->save();
     }
 }
 

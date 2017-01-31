@@ -1,14 +1,16 @@
-#ifndef BODICORE_H
+﻿#ifndef BODICORE_H
 #define BODICORE_H
 
 #include <QStringList>
 #include <QList>
+#include <memory>
 
 class SrtRecord
 {
 public:
     SrtRecord(int seq, long stime = 0, long etime = 0, const QString &cont = sDefaultText);
 
+    //zero based internal, but display and output is start with 1.
     int sequence;
     qint64 startTime;
     qint64 endTime;
@@ -19,25 +21,26 @@ public:
     QString ts() const;
     QString te() const;
 };
+typedef std::shared_ptr<SrtRecord> SrtRecordPtr;
 
 class BodhiSubtitle
 {
-    QList<SrtRecord> m_data;
+    QList<SrtRecordPtr> m_data;
     bool m_changed;
     int m_minTimeLength;
 public:
     BodhiSubtitle();
 
-    const SrtRecord* getRecord(int sequence) const;
+    const SrtRecordPtr getRecord(int sequence) const;
 
     int recordCount() const;
 
     void resetChangeFlag() { m_changed = false; }
     bool changed() const { return m_changed; }
 
-    bool modifyRecord(int sequence, SrtRecord &newValue);
+    bool modifyRecord(int sequence, SrtRecordPtr newValue);
 
-    bool append(const SrtRecord &record);
+    bool append(const SrtRecordPtr record);
 
     //return record count after remove operation.
     //return -1 if sequence is invalid.
@@ -47,7 +50,7 @@ public:
     bool merge(int startSequence, int endSequence);
     bool adjustTimePoint(int sequence, long timeDelta);
 
-    bool checkTimestamp(int sequence, const SrtRecord &newValue);
+    bool checkTimestamp(int sequence, const SrtRecordPtr newValue);
 protected:
     void updateSequence(int start, int delta);
 };

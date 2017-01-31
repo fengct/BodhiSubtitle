@@ -1,4 +1,4 @@
-#ifndef BODHIPLAYER_H
+﻿#ifndef BODHIPLAYER_H
 #define BODHIPLAYER_H
 
 #include <QObject>
@@ -27,6 +27,7 @@ public:
     bool play();
     bool play(qint64 start, qint64 end);
     bool isPlaying() const;
+    bool isOpen() const;
     void pause();
     void playPause();
 

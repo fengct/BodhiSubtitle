@@ -1,4 +1,4 @@
-#ifndef SRTVIEW_H
+﻿#ifndef SRTVIEW_H
 #define SRTVIEW_H
 
 #include <QWidget>
@@ -8,6 +8,7 @@
 
 class BodhiSubtitle;
 class BodhiSession;
+class Command;
 
 class MyScrollBar : public QScrollBar
 {
@@ -49,6 +50,8 @@ public:
     void setTabIndex(int idx);
     int tabIndex() const { return m_tabIndex; }
     BodhiSession* session() const { return m_session; }
+    void onCommand(Command *command);
+    int singleSelectItem() const;
 signals:
     void wheelEventFired(QWheelEvent *event);
 public slots:
@@ -60,10 +63,10 @@ public slots:
     void onMediaStateChanged(QMediaPlayer::State state); 
 private:
     int pickRecord(int x, int y);
-    int singleSelectItem() const;
     int shiftSelectItem(int offset);
     void scroll(int offset);
     void scrollTo(int pos);
+    int indexToPos(int index);
     bool inVisibleArea(int sequence);
     void updatePlayButtonText();
     void updateProgressBar(bool setRange);

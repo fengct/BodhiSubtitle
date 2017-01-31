@@ -77,6 +77,13 @@ bool BodhiPlayer::isPlaying() const
     return m_player->state() == QMediaPlayer::PlayingState;
 }
 
+bool BodhiPlayer::isOpen() const
+{
+    if(m_player == NULL)
+        return false;
+    return m_player->state() != QMediaPlayer::StoppedState;
+}
+
 void BodhiPlayer::pause()
 {
     if(m_player == NULL){

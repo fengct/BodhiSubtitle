@@ -10,6 +10,9 @@
 #include <QDebug>
 #include <functional>
 #include <QTextCodec>
+#include "commands.h"
+#include <algorithm>
+#include <memory>
 #pragma execution_character_set("utf-8")
 
 BodhiSession::BodhiSession(const Work &work, QObject *parent)
@@ -80,6 +83,30 @@ void BodhiSession::onDurationGot(qint64 duration)
 //    }
 }
 
+void BodhiSession::onCommand(Command *command)
+{
+    if(!command)
+        return;
+
+    if(command->executeFlag() == Command::E_NewTask){
+        m_undoList.push_back(command);
+        clearCommandHistory(E_RedoList);
+    }
+
+    m_view->onCommand(command);
+}
+
+void BodhiSession::clearCommandHistory(CommandListType type)
+{
+    auto fn = [](Command *cmd) {delete cmd;};
+    if (type & E_UndoList){
+        std::for_each(m_undoList.begin(), m_undoList.end(), fn);
+    }
+    if (type & E_RedoList){
+        std::for_each(m_redoList.begin(), m_redoList.end(), fn);
+    }
+}
+
 void BodhiSession::clean()
 {
     if (m_data){
@@ -141,10 +168,14 @@ BodhiSubtitle* BodhiSession::loadSrtFile(const QString &path)
         return NULL;
     }
     SrtParser parser(archive);
-    SrtRecord record(0);
     BodhiSubtitle *subtitle = new BodhiSubtitle();
-    while (parser.parseOne(&record)){
-        if (!subtitle->append(record)){
+    while (true){
+        std::auto_ptr<SrtRecord> record(new SrtRecord(0));
+        if (!parser.parseOne(record.get()))
+            break;
+
+        SrtRecordPtr r(std::move(record));
+        if (!subtitle->append(r)){
             qDebug() << "append record failed!";
             delete subtitle;
             return NULL;
@@ -208,7 +239,7 @@ void BodhiSession::deactive()
         m_player->pause();
 }
 
-void BodhiSession::on_btnUndo_cliccked()
+void BodhiSession::on_btnUndo_clicked()
 {
 
 }
@@ -218,9 +249,19 @@ void BodhiSession::on_btnRedo_clicked()
 
 }
 
-void BodhiSession::on_btnAdd_cliecked()
+void BodhiSession::on_btnAdd_clicked()
 {
+    qDebug() << "add record button clieck.";
+    if (!m_player->isOpen())
+        return;
 
+    qint64 pos, len;
+    pos = m_player->position();
+    len = m_player->duration();
+
+    AddRecordCommand *command = new AddRecordCommand(*this, pos, len);
+    command->execute();
+    onCommand(command);
 }
 
 void BodhiSession::on_btnRemove_clicked()

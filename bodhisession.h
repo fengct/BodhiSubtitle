@@ -2,11 +2,13 @@
 #define BODHISESSION_H
 
 #include <QObject>
+#include <list>
 #include "config.h"
 
 class BodhiPlayer;
 class SrtView;
 class BodhiSubtitle;
+class Command;
 
 class BodhiSession : public QObject
 {
@@ -31,15 +33,17 @@ public:
     void active();
     void deactive();
     bool isActive() const { return m_active; }
+
+    qint64 getStartTime() const { return 0; } //TODO: prepare for time offset.
 signals:
     void sessionStart(BodhiSession *session);
     void sessionEnd(BodhiSession *session);
 
 public slots:
     void onDurationGot(qint64 duration);
-    void on_btnUndo_cliccked();
+    void on_btnUndo_clicked();
     void on_btnRedo_clicked();
-    void on_btnAdd_cliecked();
+    void on_btnAdd_clicked();
     void on_btnRemove_clicked();
     void on_btnSplit_clicked();
     void on_btnMerge_clicked();
@@ -51,6 +55,14 @@ protected:
     BodhiPlayer* createPlayer(const QString &path);
     bool doOpen();
     void clean();
+    void onCommand(Command *command);
+    enum CommandListType {
+        E_NoneType = 0,
+        E_UndoList = 1,
+        E_RedoList = 1 << 1,
+        E_BothList = E_UndoList | E_RedoList
+    };
+    void clearCommandHistory(CommandListType type);
 private:
     Work m_work;
     BodhiPlayer *m_player;
@@ -58,6 +70,10 @@ private:
     BodhiSubtitle *m_data;
     QString m_label;
     bool m_active;
+
+    typedef std::list<Command*> CommandList;
+    CommandList m_undoList;
+    CommandList m_redoList;
 };
 
 #endif // BODHISESSION_H

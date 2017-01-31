@@ -21,7 +21,8 @@ SOURCES += main.cpp\
     bodhicore.cpp \
     srtview.cpp \
     bodhisession.cpp \
-    bodhiplayer.cpp
+    bodhiplayer.cpp \
+    commands.cpp
 
 HEADERS  += mainwindow.h \
     config.h \

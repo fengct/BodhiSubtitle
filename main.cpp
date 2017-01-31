@@ -6,6 +6,7 @@
 #include "config.h"
 #include <QTextCodec>
 #pragma execution_character_set("utf-8")
+#pragma comment(lib, "User32.lib")
 
 int main(int argc, char *argv[])
 {

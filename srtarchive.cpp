@@ -62,10 +62,10 @@ bool SrtArchive::write(const BodhiSubtitle &data, const QString &path)
 
     int cnt = data.recordCount();
     for (int i = 0; i < cnt; i++){
-        const SrtRecord &record = *data.getRecord(i);
-        ostream << record.sequence + 1 << LineSep;
-        ostream << record.ts() << " -- >" << record.te() << LineSep;
-        ostream << record.content << LineSep;
+        const SrtRecordPtr record = data.getRecord(i);
+        ostream << record->sequence + 1 << LineSep;
+        ostream << record->ts() << " -->" << record->te() << LineSep;
+        ostream << record->content << LineSep;
         ostream << LineSep;
     }
     ostream.flush();

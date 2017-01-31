@@ -1,8 +1,9 @@
-#ifndef COMMANDS_H
+﻿#ifndef COMMANDS_H
 #define COMMANDS_H
 
 #include "bodhicore.h"
 
+class BodhiSession;
 class Command
 {
 public:
@@ -11,80 +12,90 @@ public:
     virtual void execute() = 0;
     virtual void undo() = 0;
     virtual void redo() = 0;
-    virtual bool isTimeModify() const { return FALSE;}
+    virtual bool timeModified() const { return false;}
     int getActiveLine() const { return m_activeLine; }
+
+    enum CmdExecuteFlag{
+        E_Unkown,
+        E_NewTask,
+        E_Undo,
+        E_Redo
+    };
+    CmdExecuteFlag executeFlag() const { return m_execFlag; }
+    void setExecuteFlag(CmdExecuteFlag flag) { m_execFlag = flag; }
 protected:
     BodhiSession &m_session;
+    CmdExecuteFlag m_execFlag;
     int m_activeLine;
 };
 
 class AddRecordCommand : public Command
 {
 public:
-    AddRecordCommand(BodhiSession &sessionBodhiSession &session, unsigned long pos, unsigned long length);
+    AddRecordCommand(BodhiSession &session, qint64 pos, qint64 length);
 
     virtual void execute();
     virtual void undo();
     virtual void redo();
 protected:
-    Sentence m_sentence;
-    unsigned long m_pos;
-    unsigned long m_length;
+    SrtRecordPtr m_record;
+    qint64 m_pos;
+    qint64 m_length;
 };
 
 class DelRecordCommand : public Command
 {
 public:
-    DelRecordCommand(CZimuView &view, CZimuFile &data, int seq);
+    DelRecordCommand(BodhiSession &session, int seq);
 
     virtual void execute();
     virtual void undo();
     virtual void redo();
 protected:
-    Sentence *m_sentence;
+    SrtRecordPtr m_sentence;
 };
 
 class SplitCommand : public Command
 {
 public:
-    SplitCommand(CZimuView &view, CZimuFile &data, int seq, unsigned long pos);
+    SplitCommand(BodhiSession &session, int seq, unsigned long pos);
 
     virtual void execute();
     virtual void undo();
     virtual void redo();
 protected:
-    unsigned long m_pos;
-    Sentence m_originSentence;
-    Sentence m_splitSentence1;
-    Sentence m_splitSentence2;
+    qint64 m_pos;
+    SrtRecordPtr m_originSentence;
+    SrtRecordPtr m_splitSentence1;
+    SrtRecordPtr m_splitSentence2;
 };
 
 class MergeCommand : public Command
 {
 public:
-    MergeCommand(CZimuView &view, CZimuFile &data, int seq1, int seq2);
+    MergeCommand(BodhiSession &session, int seq1, int seq2);
 
     virtual void execute();
     virtual void undo();
     virtual void redo();
 protected:
-    Sentence m_originSentence1;
-    Sentence m_originSentence2;
-    Sentence m_mergedSentence;
+    SrtRecordPtr m_originSentence1;
+    SrtRecordPtr m_originSentence2;
+    SrtRecordPtr m_mergedSentence;
 };
 
 class ContentChange : public Command
 {
 public:
-    ContentChange(CZimuView &view, CZimuFile &data, int seq, const TString &contentOld);
+    ContentChange(BodhiSession &session, int seq, const QString &contentOld);
 
     virtual void execute();
     virtual void undo();
     virtual void redo();
 private:
     int		 m_seq;
-    TString	 m_content;
-    BOOL	 m_proof;
+    QString	 m_content;
+    bool	 m_proof;
 };
 
 #endif // COMMANDS_H
