@@ -1,8 +1,9 @@
-#ifndef BODHIAPP_H
+﻿#ifndef BODHIAPP_H
 #define BODHIAPP_H
 
 #include <list>
 #include "config.h"
+#include "const.h"
 
 class MainWindow;
 class QApplication;
@@ -29,7 +30,7 @@ public:
 
     bool fileIsOpen(const QString &path);
 
-    BodhiSession* createSession(Work &work);
+    BS_Error createSession(Work &work, BodhiSession* &session);
     void closeSession(BodhiSession* session);
     void closeCurrentSession();
     BodhiSession* activeSession() const;

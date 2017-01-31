@@ -43,6 +43,7 @@ private:
     BodhiApp *myApp;
     //just for test
     std::list<QString> m_contents;
+    int m_currentTabIndex;
 };
 
 #endif // MAINWINDOW_H

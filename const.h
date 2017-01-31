@@ -1,9 +1,14 @@
-#ifndef CONST_H
+﻿#ifndef CONST_H
 #define CONST_H
 
-#include "qstring.h"
+extern const char *APP_NAME;
 
-const char *APP_NAME = "BodhiSubtitle";
+enum BS_Error
+{
+    BS_OK,
+    ERR_LOAD_SRT_FILE,
+    ERR_OPEN_AUDIO_FILE
+};
 
 #endif // CONST_H
 

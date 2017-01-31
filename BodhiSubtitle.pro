@@ -22,7 +22,8 @@ SOURCES += main.cpp\
     srtview.cpp \
     bodhisession.cpp \
     bodhiplayer.cpp \
-    commands.cpp
+    commands.cpp \
+    textview.cpp
 
 HEADERS  += mainwindow.h \
     config.h \
@@ -34,6 +35,7 @@ HEADERS  += mainwindow.h \
     srtview.h \
     bodhisession.h \
     bodhiplayer.h \
-    commands.h
+    commands.h \
+    textview.h
 
 FORMS    += mainwindow.ui

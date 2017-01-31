@@ -7,7 +7,7 @@
 #include <algorithm>
 #pragma execution_character_set("utf-8")
 
-
+const char *APP_NAME = "BodhiSubtitle";
 BodhiApp* BodhiApp::m_inst = NULL;
 
 BodhiApp& BodhiApp::getInstance()
@@ -66,19 +66,22 @@ bool BodhiApp::fileIsOpen(const QString &path)
     return false;
 }
 
-BodhiSession* BodhiApp::createSession(Work &work)
+BS_Error BodhiApp::createSession(Work &work, BodhiSession* &session)
 {
-    BodhiSession *session = new BodhiSession(work, &m_mainWnd);
+    BS_Error rt = BS_OK;
+    session = new BodhiSession(work, &m_mainWnd);
     if (!session->open()){
+        rt = session->getLastError();
         delete session;
-        return NULL;
+        session = NULL;
+        return rt;
     }
     if (m_activeSession){
         m_activeSession->deactive();
     }
     m_activeSession = session;
     m_sessions.push_back(session);
-    return session;
+    return rt;
 }
 
 void BodhiApp::closeSession(BodhiSession* session)

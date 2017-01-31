@@ -4,6 +4,7 @@
 #include <QObject>
 #include <list>
 #include "config.h"
+#include "const.h"
 
 class BodhiPlayer;
 class SrtView;
@@ -35,6 +36,8 @@ public:
     bool isActive() const { return m_active; }
 
     qint64 getStartTime() const { return 0; } //TODO: prepare for time offset.
+
+    BS_Error getLastError() const { return m_lastError; }
 signals:
     void sessionStart(BodhiSession *session);
     void sessionEnd(BodhiSession *session);
@@ -74,6 +77,8 @@ private:
     typedef std::list<Command*> CommandList;
     CommandList m_undoList;
     CommandList m_redoList;
+
+    BS_Error m_lastError;
 };
 
 #endif // BODHISESSION_H

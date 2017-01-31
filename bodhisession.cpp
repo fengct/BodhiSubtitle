@@ -22,6 +22,7 @@ BodhiSession::BodhiSession(const Work &work, QObject *parent)
     , m_view(NULL)
     , m_data(NULL)
     , m_active(true)
+    , m_lastError(BS_OK)
 {
 }
 
@@ -165,6 +166,7 @@ BodhiSubtitle* BodhiSession::loadSrtFile(const QString &path)
     SrtArchive archive(path);
     if (!archive.load()){
         qDebug() << "open srt file: " << path << " failed.";
+        m_lastError = ERR_LOAD_SRT_FILE;
         return NULL;
     }
     SrtParser parser(archive);
@@ -178,6 +180,7 @@ BodhiSubtitle* BodhiSession::loadSrtFile(const QString &path)
         if (!subtitle->append(r)){
             qDebug() << "append record failed!";
             delete subtitle;
+            m_lastError = ERR_LOAD_SRT_FILE;
             return NULL;
         }
     }
@@ -190,6 +193,7 @@ BodhiSubtitle* BodhiSession::loadSrtFile(const QString &path)
 //        qDebug() << tmp2.toUtf8().constData();
 //        qWarning() << tmp3.toUtf8().constData();
         qWarning() << parser.getErrorString().toUtf8().constData();
+        m_lastError = ERR_LOAD_SRT_FILE;
         return NULL;
     }
 
@@ -219,6 +223,7 @@ BodhiPlayer* BodhiSession::createPlayer(const QString &path)
     auto fn = std::bind(&BodhiSession::onDurationGot, this, std::placeholders::_1);
     if (!player->open(path, fn)){
         delete player;
+        m_lastError = ERR_OPEN_AUDIO_FILE;
         return NULL;
     }
     m_player = player;

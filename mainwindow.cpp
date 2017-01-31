@@ -17,13 +17,16 @@
 #include <QVariant>
 #include <QJsonObject>
 #include "config.h"
+#include "textview.h"
+
 #pragma execution_character_set("utf-8")
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
     myApp(NULL),
-    m_historyFiles(NULL)
+    m_historyFiles(NULL),
+    m_currentTabIndex(-1)
 {
     ui->setupUi(this);
 //    ui->quickWidget->setSource(QUrl::fromLocalFile("F:\\Data\\Code\\BodhiSubtitle\\test.qml"));
@@ -92,7 +95,8 @@ void MainWindow::createSession(Work &work)
         return;
     }
 
-    BodhiSession *session = myApp->createSession(work);
+    BodhiSession *session = NULL;
+    BS_Error err = myApp->createSession(work, session);
     if (session){
         SrtView *view = new SrtView(this, this->ui, session->subtitle(), session);
         int idx = ui->tabWidget->addTab(view, session->label());
@@ -110,6 +114,13 @@ void MainWindow::createSession(Work &work)
         connect(ui->btnTimeDecrease, SIGNAL(clicked()), session, SLOT(on_btnTimeDec_clicked()));
         connect(ui->btnTimeIncrease, SIGNAL(clicked()), session, SLOT(on_btnTimeInc_clicked()));
 
+        ui->tabWidget->tabBar()->setCurrentIndex(idx);
+    } else if(err == ERR_LOAD_SRT_FILE){
+        TextView *view = new TextView(ui->tabWidget);
+        QFile file(work.subtitleFile);
+        int idx = ui->tabWidget->addTab(view, file.fileName());
+        view->setTabIndex(idx);
+        view->showTextFile(work.subtitleFile);
         ui->tabWidget->tabBar()->setCurrentIndex(idx);
     }
 }
@@ -159,6 +170,7 @@ void MainWindow::on_btnNewSubtitle_clicked()
 void MainWindow::on_tabWidget_currentChanged(int index)
 {
     qDebug() << "current tab changed to: " << index;
+    m_currentTabIndex = index;
     ui->pushButton_playPause->setEnabled(index != 0);
     ui->progressBar->setEnabled(index != 0);
     ui->pushButton_playPause->setVisible(index != 0);
@@ -169,10 +181,16 @@ void MainWindow::on_tabWidget_currentChanged(int index)
     } else {
         QWidget *tab = ui->tabWidget->widget(index);
         SrtView *sv = dynamic_cast<SrtView*>(tab);
-        if (sv)
+        if (sv){
             myApp->setActiveSession(sv->session());
             if (sv->tabIndex() == index){
                 sv->onTabActived();
+            }
+        } else {
+            ui->pushButton_playPause->setEnabled(false);
+            ui->progressBar->setEnabled(false);
+            ui->pushButton_playPause->setVisible(false);
+            ui->progressBar->setVisible(false);
         }
     }
 }
@@ -191,10 +209,13 @@ void MainWindow::on_actionClose_triggered()
         disconnect(ui->btnTimeIncrease, SIGNAL(clicked()), session, SLOT(on_btnTimeInc_clicked()));
 
         int tabIndex = session->view()->tabIndex();
-        ui->tabWidget->removeTab(tabIndex);
+
         myApp->closeSession(session);
 
         updateHistoryList();
+    }else{
+        ui->tabWidget->removeTab(m_currentTabIndex);
+        m_currentTabIndex = -1;
     }
 }
 
