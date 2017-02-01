@@ -1,4 +1,6 @@
-﻿#include "srtarchive.h"
+﻿
+#include "./h/charsetdetect.h"
+#include "srtarchive.h"
 #include <QFile>
 #include <QTextStream>
 #include <QDebug>
@@ -6,6 +8,33 @@
 #pragma execution_character_set("utf-8")
 
 static QString LineSep = ("\r\n");
+
+const char * getFileEncodeName(const char* path)
+{
+    FILE *fs = fopen(path, "rb");
+    if (fs == NULL){
+        return NULL;
+    }
+    char buf[4096] = {0};
+    int sz = 0;
+    csd_t csd = csd_open();
+    sz = fread(buf, sizeof(buf), 1, fs);
+    while (sz != 0){
+        int result = csd_consider(csd, buf, sz);
+        if (result < 0){
+            return NULL;
+        }else if(result > 0){
+            break;
+        }
+    }
+
+    const char *name = csd_close(csd);
+    if (name)
+        qDebug() << "file: [" << path << "] encode: " << name;
+    else
+        qWarning() << "file: [" << path << "] encode: unkown.";
+    return name;
+}
 
 SrtArchive::SrtArchive(const QString &path)
     : m_path(path)
@@ -22,6 +51,8 @@ bool SrtArchive::load()
         qWarning() << "open file failed!";
         return false;
     }
+
+    const char *encodeName = getFileEncodeName(m_path.toStdString().c_str());
 
     QTextStream instream(&file);
     instream.setAutoDetectUnicode(true);

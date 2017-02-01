@@ -36,6 +36,9 @@ HEADERS  += mainwindow.h \
     bodhisession.h \
     bodhiplayer.h \
     commands.h \
-    textview.h
+    textview.h \
+    h/charsetdetect.h
 
 FORMS    += mainwindow.ui
+
+win32: LIBS += -L$$PWD/libs/ -lcharsetdetect
